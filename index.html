@@ -1,0 +1,892 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="light">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="theme-color" content="#f5f6f8" />
+<title>英语复习卡片</title>
+<style>
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+:root{
+  --bg:#f5f6f8; --card:#fff; --text:#16181d; --muted:#6b7280; --line:#e4e7ec;
+  --accent:#2563eb; --accent-soft:#eef4ff; --ok:#15803d; --ok-soft:#eafaf0;
+  --warn:#b45309; --warn-soft:#fff6e6; --bad:#b91c1c; --bad-soft:#fdeeee;
+  --shadow:0 1px 2px rgba(16,24,40,.05), 0 8px 24px rgba(16,24,40,.06);
+  --r:14px;
+}
+html[data-theme="dark"]{
+  --bg:#0f1115; --card:#181b21; --text:#e9ecf1; --muted:#98a2b3; --line:#2a2f38;
+  --accent:#6ea8ff; --accent-soft:#1a2433; --ok:#4ade80; --ok-soft:#14251c;
+  --warn:#fbbf24; --warn-soft:#2a2113; --bad:#f87171; --bad-soft:#2b1618;
+  --shadow:0 1px 2px rgba(0,0,0,.4), 0 8px 24px rgba(0,0,0,.35);
+}
+body{
+  margin:0; background:var(--bg); color:var(--text);
+  font:15px/1.55 -apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;
+  padding-bottom:40px;
+}
+.wrap{max-width:760px;margin:0 auto;padding:0 14px}
+header.top{
+  position:sticky;top:0;z-index:20;background:var(--bg);
+  border-bottom:1px solid var(--line);
+}
+.top-in{max-width:760px;margin:0 auto;padding:10px 14px 0}
+.brand{font-weight:700;font-size:16px;letter-spacing:.3px;display:flex;align-items:center;gap:8px}
+.brand .dot{width:8px;height:8px;border-radius:50%;background:var(--accent)}
+.tabs{display:flex;gap:4px;margin-top:8px;overflow-x:auto}
+.tab{
+  border:0;background:transparent;color:var(--muted);font:inherit;font-weight:600;
+  padding:8px 14px;border-radius:10px 10px 0 0;cursor:pointer;white-space:nowrap;position:relative;top:1px;
+}
+.tab.active{color:var(--accent);background:var(--card);box-shadow:0 -1px 0 var(--line),1px 0 0 var(--line),-1px 0 0 var(--line)}
+.view{display:none;padding-top:16px}
+.view.active{display:block}
+.bar{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px;flex-wrap:wrap}
+.muted{color:var(--muted);font-size:13px}
+.chk{display:inline-flex;align-items:center;gap:6px;font-size:13px;color:var(--muted);cursor:pointer;user-select:none}
+.chk input{accent-color:var(--accent);width:16px;height:16px}
+/* flashcard */
+.flash{
+  background:var(--card);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--shadow);
+  min-height:280px;padding:26px 22px 22px;position:relative;cursor:pointer;
+  display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;
+}
+.flash:active{transform:scale(.995)}
+.fc-tag{
+  position:absolute;top:12px;left:14px;font-size:11px;font-weight:700;letter-spacing:.5px;
+  padding:3px 9px;border-radius:999px;background:var(--accent-soft);color:var(--accent);
+}
+.fc-tag.s{background:var(--warn-soft);color:var(--warn)}
+.big{font-size:38px;font-weight:700;letter-spacing:.5px;word-break:break-word}
+.mid{font-size:22px;font-weight:600;line-height:1.4;word-break:break-word}
+.ipa{color:var(--muted);font-size:16px;margin-top:8px;font-family:"Segoe UI",Arial,sans-serif}
+.ans{font-size:22px;font-weight:700;color:var(--accent);word-break:break-word}
+.ex{margin-top:14px;font-size:15px;line-height:1.6}
+.ex b{font-weight:600}
+.note{
+  margin-top:14px;font-size:14px;line-height:1.7;color:var(--text);text-align:left;
+  background:var(--warn-soft);border-radius:10px;padding:10px 12px;white-space:pre-wrap;
+}
+.orig{color:var(--muted);font-size:14px;text-decoration:line-through;margin-top:12px}
+.spk{
+  position:absolute;top:10px;right:12px;width:42px;height:42px;border-radius:50%;
+  border:1px solid var(--line);background:var(--card);font-size:19px;cursor:pointer;line-height:1;
+}
+.spk:hover{background:var(--accent-soft);border-color:var(--accent)}
+.tap{color:var(--muted);font-size:13px;margin-top:18px}
+.done{font-size:20px;font-weight:700;line-height:2}
+.actions{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:14px}
+.btn{
+  border:1px solid var(--line);background:var(--card);color:var(--text);font:inherit;font-weight:600;
+  padding:12px 14px;border-radius:12px;cursor:pointer;transition:.12s;
+}
+.btn:hover{border-color:var(--accent);color:var(--accent)}
+.btn.ok{background:var(--ok-soft);color:var(--ok);border-color:transparent}
+.btn.warn{background:var(--warn-soft);color:var(--warn);border-color:transparent}
+.btn.bad{background:var(--bad-soft);color:var(--bad);border-color:transparent}
+.btn.primary{background:var(--accent);color:#fff;border-color:transparent}
+.btn.sm{padding:6px 10px;font-size:13px;border-radius:9px;font-weight:500}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.hint{text-align:center;margin-top:12px}
+.prog{height:5px;border-radius:99px;background:var(--line);overflow:hidden;margin:10px 0 4px}
+.prog i{display:block;height:100%;background:var(--accent);width:0;transition:.25s}
+/* list */
+.row{
+  background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin-bottom:9px;
+}
+.row .t1{font-weight:700;font-size:16px;word-break:break-word}
+.row .t2{color:var(--muted);font-size:13.5px;margin-top:3px;word-break:break-word}
+.row .ops{display:flex;gap:6px;margin-top:9px;flex-wrap:wrap}
+.pill{font-size:11px;padding:2px 8px;border-radius:999px;background:var(--accent-soft);color:var(--accent);font-weight:700}
+.pill.b{background:var(--ok-soft);color:var(--ok)}
+.pill.g{background:var(--line);color:var(--muted)}
+/* import / settings */
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:16px;box-shadow:var(--shadow);margin-bottom:14px}
+.card h3{margin:0 0 10px;font-size:15px}
+textarea,input[type=text],select{
+  width:100%;background:var(--bg);color:var(--text);border:1px solid var(--line);border-radius:10px;
+  padding:10px 12px;font:inherit;outline:none;
+}
+textarea{min-height:220px;resize:vertical;font-family:ui-monospace,Consolas,monospace;font-size:13px;line-height:1.6}
+textarea:focus,input:focus,select:focus{border-color:var(--accent)}
+.field{margin-bottom:10px}
+.field label{display:block;font-size:13px;color:var(--muted);margin-bottom:4px}
+.rowflex{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.pv{border:1px dashed var(--line);border-radius:10px;padding:10px;max-height:280px;overflow:auto;font-size:13.5px}
+.pv div{padding:4px 0;border-bottom:1px dashed var(--line)}
+.pv div:last-child{border-bottom:0}
+.pv .k{color:var(--accent);font-weight:700}
+pre.snippet{
+  background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:12px;
+  font-size:12.5px;line-height:1.65;white-space:pre-wrap;word-break:break-word;margin:0;
+  font-family:ui-monospace,Consolas,monospace;max-height:260px;overflow:auto;
+}
+.toast{
+  position:fixed;left:50%;bottom:26px;transform:translateX(-50%);z-index:99;
+  background:#16181d;color:#fff;padding:9px 16px;border-radius:99px;font-size:13.5px;box-shadow:var(--shadow);
+}
+html[data-theme="dark"] .toast{background:#e9ecf1;color:#16181d}
+input[type=range]{width:100%;accent-color:var(--accent)}
+@media(max-width:520px){
+  .big{font-size:32px}.mid{font-size:19px}.ans{font-size:19px}
+  .flash{min-height:240px;padding:24px 16px 18px}
+}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="top-in">
+    <div class="brand"><span class="dot"></span>英语复习卡片</div>
+    <nav class="tabs">
+      <button class="tab active" data-view="review">复习</button>
+      <button class="tab" data-view="list">卡片</button>
+      <button class="tab" data-view="import">导入</button>
+      <button class="tab" data-view="settings">设置</button>
+    </nav>
+  </div>
+</header>
+
+<div class="wrap">
+
+  <!-- ============ 复习 ============ -->
+  <section class="view active" id="v-review">
+    <div class="bar">
+      <div class="muted" id="dueInfo">—</div>
+      <label class="chk"><input type="checkbox" id="blindBox" /> 盲听模式</label>
+    </div>
+    <div class="prog"><i id="progBar"></i></div>
+    <div class="flash" id="flash">
+      <div class="fc-tag" id="fcTag">生词</div>
+      <button class="spk" id="spkBtn" title="朗读 (R)">🔊</button>
+      <div id="fcFront"></div>
+      <div id="fcBack" hidden></div>
+    </div>
+    <div class="actions" id="gradeActions" hidden>
+      <button class="btn bad"  data-g="0">不会</button>
+      <button class="btn warn" data-g="1">模糊</button>
+      <button class="btn ok"   data-g="2">会了</button>
+    </div>
+    <div class="hint muted">点卡片翻面 · 翻面后 左滑不会 / 上滑模糊 / 右滑会了 · 空格翻面 · 1 不会 / 2 模糊 / 3 会了 · R 重听</div>
+  </section>
+
+  <!-- ============ 卡片列表 ============ -->
+  <section class="view" id="v-list">
+    <div class="bar">
+      <input type="text" id="search" placeholder="搜索单词 / 中文 / 句子…" style="flex:1;min-width:180px" />
+      <button class="btn sm" id="btnAdd">+ 手动加一张</button>
+    </div>
+    <div id="listBox"></div>
+  </section>
+
+  <!-- ============ 导入 ============ -->
+  <section class="view" id="v-import">
+    <div class="card">
+      <h3>① 把豆包整理好的内容粘进来</h3>
+      <textarea id="rawIn" placeholder="直接粘贴豆包输出的内容，点下面「解析预览」"></textarea>
+      <div class="rowflex" style="margin-top:10px">
+        <button class="btn primary" id="btnParse">解析预览</button>
+        <button class="btn sm" id="btnLoadSeed">载入今晚示例</button>
+        <button class="btn sm" id="btnClearIn">清空输入</button>
+      </div>
+      <div id="pvBox" style="margin-top:12px" hidden>
+        <div class="muted" id="pvCount"></div>
+        <div class="pv" id="pvList"></div>
+        <div class="rowflex" style="margin-top:10px">
+          <button class="btn primary" id="btnImportMerge">追加导入</button>
+          <button class="btn" id="btnImportReplace">替换全部</button>
+          <button class="btn sm" id="btnPvCancel">取消</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>② 让豆包按固定格式输出的提示词</h3>
+      <div class="muted" style="margin-bottom:8px">每次聊完，直接把下面这段发给豆包：</div>
+      <pre class="snippet" id="promptBox"></pre>
+      <div class="rowflex" style="margin-top:10px">
+        <button class="btn primary" id="btnCopyPrompt">复制提示词</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>③ 备份 / 恢复</h3>
+      <div class="rowflex">
+        <button class="btn" id="btnExportJson">导出备份 (JSON)</button>
+        <button class="btn" id="btnExportMd">导出文本 (Markdown)</button>
+        <button class="btn" id="btnImportJson">导入备份</button>
+        <input type="file" id="fileJson" accept=".json" hidden />
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 设置 ============ -->
+  <section class="view" id="v-settings">
+    <div class="card">
+      <h3>朗读</h3>
+      <div class="field">
+        <label>语速：<b id="rateVal">0.9</b>（通勤建议 0.85～1.0）</label>
+        <input type="range" id="rate" min="0.5" max="1.3" step="0.05" />
+      </div>
+      <div class="field">
+        <label>英文语音（选带 English / US / UK 的）</label>
+        <select id="voiceSel"></select>
+      </div>
+      <div class="field">
+        <label class="chk"><input type="checkbox" id="autoPlay" /> 卡片出现时自动朗读</label>
+      </div>
+      <div class="rowflex">
+        <button class="btn sm" id="btnTest">试听</button>
+        <span class="muted" id="ttsWarn"></span>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>复习</h3>
+      <div class="field">
+        <label>出卡顺序</label>
+        <select id="orderSel">
+          <option value="due">到期优先（推荐）</option>
+          <option value="random">随机</option>
+          <option value="new">新卡优先</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>外观</label>
+        <select id="themeSel">
+          <option value="auto">跟随系统</option>
+          <option value="light">浅色</option>
+          <option value="dark">深色</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>数据</h3>
+      <div class="muted" id="dataStat"></div>
+      <div class="rowflex" style="margin-top:10px">
+        <button class="btn" id="btnResetBox">把全部卡片重置为「未复习」</button>
+        <button class="btn" id="btnClearAll" style="color:var(--bad)">清空所有卡片</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>怎么装到手机上</h3>
+      <div class="muted" style="line-height:1.8">
+        把这个 html 文件发到手机（微信文件传输助手 / QQ / 网盘），用 <b>Chrome 或 Edge</b> 打开；<br />
+        再点浏览器菜单 →「添加到主屏幕」，以后就像 App 一样点开用。<br />
+        手机浏览器自带英文发音（Google 语音），不需要联网也能读。
+      </div>
+    </div>
+  </section>
+
+</div>
+
+<div class="toast" id="toast" hidden></div>
+
+<script>
+/* =========================================================
+   英语复习卡片 —— 单文件版
+   数据存 localStorage，发音用浏览器内置 TTS
+   ========================================================= */
+const KEY = 'en_review_v1';
+const DAY = 86400000;
+const INTERVALS = [0, 1, 3, 7, 16, 35];       // 每盒子的间隔天数（盒子 0~5）
+const BOX_NAME = ['新卡', '1天', '3天', '7天', '16天', '35天'];
+const DEFAULT_SETTINGS = { rate: 0.9, voiceURI: '', autoPlay: true, blind: false, order: 'due', theme: 'auto' };
+
+/* ---------- 豆包固定格式提示词 ---------- */
+const PROMPT = `请把我们刚才的英语口语练习整理成下面这个固定格式，只输出内容，不要加任何多余的解释和寒暄：
+
+【生词】
+1. 单词 /音标/  中文释义
+例：英文例句 中文翻译
+2. 单词 /音标/  中文释义
+例：英文例句 中文翻译
+
+【句子纠错】
+1. 原句：<我说的原句，保留我的语法错误，不要修正>
+✅ 修正：<修正后自然的英文>
+💡 重点：<一句话说清错在哪、或关键搭配>
+2. 原句：<同上>
+✅ 修正：<同上>
+💡 重点：<同上>
+
+要求：
+- 生词只收我这次真正不会的词，5～15 个；每条必须有音标和例句，例句尽量用我们聊的话题（比如葡萄、育种、水果）。
+- 句子纠错只收我这次说错的句子，3～8 条；「原句」必须原样保留我的说法。
+- 编号每部分都从 1 重新开始。
+- 不要写总结、不要写鼓励的话、不要用表格。`;
+
+/* ---------- 今晚示例数据（首次打开自动载入） ---------- */
+const SEED = `1. authentic /ɔːˈθentɪk/  正宗的
+例：authentic sunshine rose grapes 正宗阳光玫瑰葡萄
+2. genuine /ˈdʒenjuɪn/  纯正的（也可表示正宗）
+例：genuine seedless grapes 纯正无籽葡萄
+3. seed /siːd/  籽，种子
+例：This grape has seeds. 这个葡萄有籽。
+4. seedless /ˈsiːdləs/  无籽的
+例：seedless grapes 无籽葡萄
+5. hybrid /ˈhaɪbrɪd/  杂交的；杂交品种
+例：hybrid process 杂交过程
+6. hybridization /ˌhaɪbrədaɪˈzeɪʃn/  杂交（专业术语）
+7. stamen /ˈsteɪmən/  雄蕊
+8. pistil /ˈpɪstɪl/  雌蕊
+9. pollen /ˈpɒlən/  花粉
+10. cutting /ˈkʌtɪŋ/  扦插苗（农业里，枝条扦插）
+例：grape cuttings 葡萄扦插苗
+11. persimmon /pɜːˈsɪmən/  柿子
+12. appropriate /əˈprəʊpriət/  合适的，适宜的
+13. variety /vəˈraɪəti/  品种
+例：a new variety of grape 葡萄新品种
+14. trait /treɪt/  性状（育种专用，比如"无籽"这个性状）
+例：the seedless trait 无籽性状
+15. stable /ˈsteɪbl/  稳定的
+例：The trait becomes stable. 性状稳定下来。
+16. courtyard /ˈkɔːtjɑːd/  小院；yard /jɑːd/ 院子（日常）
+
+1. 原句：the grape is was plant in zhejiang province
+✅ 修正：The grapes I bought were grown in Zhejiang Province.
+💡 重点：grow（种植）被动用 be grown，不是 be plant。植物种植常用 grow，很少直接用 plant。
+2. 原句：maybe not suitable plant in zhejiang
+✅ 修正：Maybe they are not suitable for planting in Zhejiang.
+💡 重点：固定搭配 suitable for + 名词 / doing，不能直接说 suitable do sth。
+3. 原句：can i plant the seed of this kind
+✅ 修正：Can I buy seeds of this variety and grow them?
+💡 重点：农业场景里品种多用 variety；无籽品种一般不能靠种子繁殖。
+4. 原句：because first flower and and later a grape, how to find the previous flower
+✅ 修正：A flower develops into a grape. So how do we trace back to that original flower?
+💡 重点：trace back to 追溯到；花发育成果实用 develop into。
+5. 原句：maybe some people inject sweeter drug to them
+✅ 修正：Maybe some farmers inject sugar water into the grapes to make them sweeter.
+💡 重点：不是 sweeter drug，糖水是 sugar water；介词用 inject A into B。
+6. 原句：if i'm a farmer i will plant the grape became a special that is not to sweet but seedless
+✅ 修正：If I were a farmer, I would breed a special variety that is not too sweet but seedless.
+💡 重点：虚拟语气 If I were…, I would…；培育新品种用 breed，plant 只是"种"；not too sweet。
+7. 原句：how to hybrid the two flowers
+✅ 修正：How do you hybridize two flowers? / How is hybridization done?
+💡 重点：hybrid 多为形容词/名词，动词是 hybridize。`;
+
+/* ================= 解析器 ================= */
+function after(label, line) {
+  const i = line.indexOf(label);
+  const s = i < 0 ? line : line.slice(i + label.length);
+  return s.replace(/^\s*[:：]\s*/, '').replace(/\*\*/g, '').trim();
+}
+function splitEnCn(s) {
+  const i = s.search(/[\u4e00-\u9fa5]/);
+  if (i <= 0) return { en: s.trim(), cn: '' };
+  return { en: s.slice(0, i).trim(), cn: s.slice(i).trim() };
+}
+function parseWordLine(body) {
+  const c = { type: 'word', word: '', ipa: '', cn: '', example: '', exampleCn: '' };
+  const im = body.match(/\/[^\/]+\//);
+  if (im) {
+    const idx = body.indexOf(im[0]);
+    c.ipa = im[0];
+    c.word = body.slice(0, idx).trim();
+    c.cn = body.slice(idx + im[0].length).trim();
+  } else {
+    const sp = body.search(/[\u4e00-\u9fa5]/);
+    if (sp > 0) { c.word = body.slice(0, sp).trim(); c.cn = body.slice(sp).trim(); }
+    else c.word = body.trim();
+  }
+  c.word = c.word.replace(/^[\-\*\s]+/, '').replace(/[.。,，;；]+$/, '').trim();
+  return c;
+}
+function parseText(txt) {
+  const out = [];
+  let cur = null, section = '';
+  const flush = () => {
+    if (!cur) return;
+    if (cur.type === 'word' ? cur.word : cur.original) out.push(cur);
+    cur = null;
+  };
+  const lines = String(txt || '').replace(/\r/g, '').split('\n');
+  for (const raw of lines) {
+    const line = raw.trim();
+    if (!line) continue;
+    // 分区标题：【生词】【句子纠错】，也兼容 📌 今日生词 / ## 句子纠错 之类
+    const bare = line.replace(/[\s\p{Extended_Pictographic}✅💡📌⭐#*:：\-【】\[\]（）()0-9]/gu, '');
+    if (bare.length <= 12 && /(生词|词汇|单词)/.test(bare)) { flush(); section = 'word'; continue; }
+    if (bare.length <= 12 && /(句子|纠错|错句|病句)/.test(bare)) { flush(); section = 'sentence'; continue; }
+    const m = line.match(/^(\d+)\s*[.、)）]\s*(.*)$/);
+    if (m) {
+      const body = m[2];
+      flush();
+      if (/原句/.test(body)) {
+        cur = { type: 'sentence', original: after('原句', body), corrected: '', note: '' };
+      } else if (section === 'sentence') {
+        cur = { type: 'sentence', original: body.replace(/[.。]+$/, '').trim(), corrected: '', note: '' };
+      } else {
+        cur = parseWordLine(body);
+      }
+      continue;
+    }
+    if (!cur) continue;
+    if (cur.type === 'sentence') {
+      if (/修正/.test(line)) { cur.corrected = after('修正', line); continue; }
+      if (/重点|注意|要点/.test(line)) { cur.note = after('重点', line); continue; }
+      if (/^[-•*]\s*/.test(line) || /^[✅💡📌]/.test(line)) {
+        cur.note = (cur.note ? cur.note + '\n' : '') + line.replace(/^[✅💡📌]?\s*[-•*]?\s*/, '');
+        continue;
+      }
+      continue;
+    }
+    // 生词卡的续行
+    if (/^例\s*[:：]/.test(line) || /^例句\s*[:：]/.test(line)) {
+      const ex = splitEnCn(after('例', line));
+      cur.example = ex.en; cur.exampleCn = ex.cn;
+      continue;
+    }
+    if (/^(释义|中文|意思|解释)\s*[:：]/.test(line)) { cur.cn = after('释义', line); continue; }
+  }
+  flush();
+  return out;
+}
+
+/* ================= 状态 ================= */
+let S = loadState();
+function uid() { return Math.random().toString(36).slice(2, 10) + Date.now().toString(36).slice(-4); }
+function normalize(c) {
+  return Object.assign({ id: uid(), box: 0, due: 0, right: 0, wrong: 0, created: Date.now() }, c);
+}
+function loadState() {
+  try {
+    const raw = localStorage.getItem(KEY);
+    if (raw) {
+      const o = JSON.parse(raw);
+      return { cards: (o.cards || []).map(normalize), settings: Object.assign({}, DEFAULT_SETTINGS, o.settings || {}) };
+    }
+  } catch (e) { /* ignore */ }
+  return { cards: parseText(SEED).map(normalize), settings: Object.assign({}, DEFAULT_SETTINGS) };
+}
+function save() {
+  try { localStorage.setItem(KEY, JSON.stringify(S)); }
+  catch (e) { toast('保存失败：' + e.message); }
+}
+
+/* ================= TTS ================= */
+let VOICES = [];
+const synth = window.speechSynthesis;
+function enOnly(s) {
+  return String(s || '')
+    .replace(/[\u3000-\u303f\u4e00-\u9fff\uff00-\uffef]/g, ' ')
+    .replace(/\s+/g, ' ').trim();
+}
+function loadVoices() {
+  if (!synth) return;
+  VOICES = synth.getVoices().filter(v => /^en/i.test(v.lang || ''));
+  const sel = $('#voiceSel');
+  if (!sel) return;
+  const cur = S.settings.voiceURI;
+  sel.innerHTML = '<option value="">（浏览器默认）</option>' +
+    VOICES.map(v => `<option value="${v.voiceURI}">${v.name} · ${v.lang}</option>`).join('');
+  sel.value = VOICES.some(v => v.voiceURI === cur) ? cur : '';
+  $('#ttsWarn').textContent = synth ? '' : '当前浏览器不支持朗读，建议用 Chrome / Edge。';
+}
+function speak(text) {
+  const t = enOnly(text);
+  if (!t) return;
+  if (!synth) { toast('当前浏览器不支持朗读，请用 Chrome / Edge'); return; }
+  try { synth.cancel(); } catch (e) { /* ignore */ }
+  const u = new SpeechSynthesisUtterance(t);
+  u.lang = 'en-US';
+  u.rate = Number(S.settings.rate) || 0.9;
+  const v = VOICES.find(v => v.voiceURI === S.settings.voiceURI);
+  if (v) u.voice = v;
+  synth.speak(u);
+}
+
+/* ================= 小工具 ================= */
+const $ = s => document.querySelector(s);
+const $$ = s => Array.from(document.querySelectorAll(s));
+let toastTimer = null;
+function toast(msg) {
+  const el = $('#toast');
+  el.textContent = msg; el.hidden = false;
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => { el.hidden = true; }, 1800);
+}
+function shuffle(a) { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1));[a[i], a[j]] = [a[j], a[i]]; } return a; }
+function esc(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c])); }
+function frontText(c) { return c.type === 'word' ? c.word : c.original; }
+function backText(c) { return c.type === 'word' ? (c.example || c.word) : (c.corrected || c.original); }
+function speakTextFor(c, flipped) {
+  if (!flipped && S.settings.blind && c.type === 'sentence') return c.corrected || c.original;
+  return flipped ? backText(c) : frontText(c);
+}
+function boxPill(c) {
+  const cls = c.box >= 4 ? 'pill b' : (c.box === 0 ? 'pill g' : 'pill');
+  return `<span class="${cls}">${BOX_NAME[c.box] || '新卡'}</span>`;
+}
+
+/* ================= 视图切换 ================= */
+$$('.tab').forEach(b => b.addEventListener('click', () => switchView(b.dataset.view)));
+function switchView(name) {
+  $$('.tab').forEach(t => t.classList.toggle('active', t.dataset.view === name));
+  $$('.view').forEach(v => v.classList.toggle('active', v.id === 'v-' + name));
+  if (name === 'list') renderList();
+  if (name === 'settings') renderSettings();
+  if (name === 'import') { $('#promptBox').textContent = PROMPT; }
+  window.scrollTo({ top: 0 });
+}
+
+/* ================= 复习 ================= */
+let queue = [], current = null, flipped = false, sessionTotal = 0, sessionDone = 0;
+
+function buildQueue() {
+  const now = Date.now();
+  let due = S.cards.filter(c => c.due <= now);
+  if (!due.length) due = S.cards.slice();
+  const order = S.settings.order;
+  if (order === 'random') due = shuffle(due);
+  else if (order === 'new') due.sort((a, b) => (a.created || 0) - (b.created || 0));
+  else due.sort((a, b) => (a.due || 0) - (b.due || 0));
+  queue = due;
+  sessionTotal = due.length; sessionDone = 0;
+}
+function nextCard() {
+  current = queue.shift() || null;
+  flipped = false;
+  renderCard();
+}
+function renderCard() {
+  const front = $('#fcFront'), back = $('#fcBack'), tag = $('#fcTag');
+  const act = $('#gradeActions');
+  if (!current) {
+    tag.textContent = '完成';
+    front.innerHTML = '<div class="done">今日复习完成 🎉</div><button class="btn primary sm" id="btnAgain" style="margin-top:14px">再来一轮</button>';
+    back.hidden = true;
+    act.hidden = true;
+    $('#progBar').style.width = '100%';
+    updateDueInfo();
+    const ag = $('#btnAgain');
+    if (ag) ag.addEventListener('click', e => { e.stopPropagation(); buildQueue(); nextCard(); });
+    return;
+  }
+  const c = current;
+  const isWord = c.type === 'word';
+  tag.textContent = isWord ? '生词' : '句子';
+  tag.className = 'fc-tag' + (isWord ? '' : ' s');
+
+  if (!flipped) {
+    const hide = S.settings.blind;
+    front.innerHTML = hide
+      ? '<div class="mid muted">盲听模式：点 🔊 听发音</div><div class="tap">点卡片看答案</div>'
+      : (isWord
+        ? `<div class="big">${esc(c.word)}</div>${c.ipa ? `<div class="ipa">${esc(c.ipa)}</div>` : ''}<div class="tap">点卡片看释义</div>`
+        : `<div class="mid">${esc(c.original)}</div><div class="tap">点卡片看修正</div>`);
+    back.hidden = true;
+    act.hidden = true;
+    if (S.settings.autoPlay) setTimeout(() => speak(speakTextFor(c, false)), 180);
+  } else {
+    front.innerHTML = isWord
+      ? `<div class="big" style="font-size:28px">${esc(c.word)}</div>${c.ipa ? `<div class="ipa">${esc(c.ipa)}</div>` : ''}`
+      : `<div class="mid muted" style="font-size:16px">${esc(c.original)}</div>`;
+    back.innerHTML = isWord
+      ? `<div class="ans">${esc(c.cn || '—')}</div>` +
+        (c.example ? `<div class="ex">${esc(c.example)}</div>` + (c.exampleCn ? `<div class="muted" style="margin-top:2px">${esc(c.exampleCn)}</div>` : '') : '')
+      : `<div class="ans">${esc(c.corrected || '—')}</div>` +
+        (c.note ? `<div class="note">${esc(c.note)}</div>` : '');
+    back.hidden = false;
+    act.hidden = false;
+    if (S.settings.autoPlay) setTimeout(() => speak(backText(c)), 160);
+  }
+  const done = sessionTotal - queue.length - 1;
+  $('#progBar').style.width = Math.max(0, Math.min(100, (done / Math.max(1, sessionTotal)) * 100)) + '%';
+  updateDueInfo();
+}
+function flip() { if (!current) return; flipped = !flipped; renderCard(); }
+function grade(g) {
+  if (!current) return;
+  const now = Date.now();
+  if (g === 0) { current.box = 0; current.due = now + 5 * 60000; current.wrong = (current.wrong || 0) + 1; }
+  else if (g === 1) { current.box = Math.max(1, current.box || 0); current.due = now + DAY; current.right = (current.right || 0) + 1; }
+  else {
+    current.box = Math.min(INTERVALS.length - 1, (current.box || 0) + 1);
+    current.due = now + INTERVALS[current.box] * DAY;
+    current.right = (current.right || 0) + 1;
+  }
+  save();
+  sessionDone++;
+  nextCard();
+}
+function updateDueInfo() {
+  const now = Date.now();
+  const dueN = S.cards.filter(c => c.due <= now).length;
+  const rest = queue.length;
+  $('#dueInfo').textContent = `共 ${S.cards.length} 张 · 到期 ${dueN} 张 · 本轮剩 ${rest} 张`;
+}
+$('#flash').addEventListener('click', e => { if (e.target.closest('.spk')) return; flip(); });
+/* 翻面后滑动打分：左滑不会 / 上滑模糊 / 右滑会了 */
+(function(){
+  let sx = 0, sy = 0, tracking = false;
+  const el = $('#flash');
+  el.addEventListener('touchstart', e => {
+    if (e.touches.length !== 1) return;
+    tracking = true;
+    sx = e.touches[0].clientX; sy = e.touches[0].clientY;
+  }, {passive:true});
+  el.addEventListener('touchend', e => {
+    if (!tracking) return;
+    tracking = false;
+    if (!flipped || !current) return;
+    const t = e.changedTouches[0];
+    const dx = t.clientX - sx, dy = t.clientY - sy;
+    const TH = 55;
+    if (Math.abs(dx) < TH && dy > -TH) return;
+    if (Math.abs(dx) >= Math.abs(dy)) grade(dx > 0 ? 2 : 0);
+    else if (dy < 0) grade(1);
+    else flip();
+  }, {passive:true});
+})();
+$('#spkBtn').addEventListener('click', e => { e.stopPropagation(); if (current) speak(speakTextFor(current, flipped)); });
+$$('#gradeActions .btn').forEach(b => b.addEventListener('click', () => grade(Number(b.dataset.g))));
+$('#blindBox').addEventListener('change', e => { S.settings.blind = e.target.checked; save(); renderCard(); });
+document.addEventListener('keydown', e => {
+  if (/input|textarea|select/i.test(e.target.tagName)) return;
+  if (!$('#v-review').classList.contains('active')) return;
+  if (e.code === 'Space') { e.preventDefault(); flip(); }
+  else if (e.key === '1') grade(0);
+  else if (e.key === '2') grade(1);
+  else if (e.key === '3') grade(2);
+  else if (e.key.toLowerCase() === 'r') { if (current) speak(speakTextFor(current, flipped)); }
+});
+
+/* ================= 卡片列表 ================= */
+$('#search').addEventListener('input', renderList);
+function renderList() {
+  const q = ($('#search').value || '').trim().toLowerCase();
+  const list = S.cards.filter(c => !q || [c.word, c.cn, c.example, c.original, c.corrected, c.note].join(' ').toLowerCase().includes(q));
+  const box = $('#listBox');
+  if (!list.length) { box.innerHTML = '<div class="muted" style="padding:20px 0">没有卡片，去「导入」页粘一份吧。</div>'; return; }
+  box.innerHTML = list.map(c => {
+    const isWord = c.type === 'word';
+    const t1 = isWord ? `${esc(c.word)}${c.ipa ? ' <span class="muted">' + esc(c.ipa) + '</span>' : ''}` : esc(c.original);
+    const t2 = isWord
+      ? [c.cn, c.example].filter(Boolean).map(esc).join(' · ')
+      : [c.corrected, c.note].filter(Boolean).map(esc).join(' | ');
+    const dueTxt = c.due && c.due > Date.now() ? new Date(c.due).toLocaleDateString('zh-CN') : '待复习';
+    return `<div class="row">
+      <div class="t1">${t1}</div>
+      <div class="t2">${t2}</div>
+      <div class="ops">
+        ${boxPill(c)}
+        <span class="pill g">${dueTxt}</span>
+        <span class="pill g">✔${c.right || 0} ✘${c.wrong || 0}</span>
+        <button class="btn sm" data-act="spk" data-id="${c.id}">🔊</button>
+        <button class="btn sm" data-act="edit" data-id="${c.id}">编辑</button>
+        <button class="btn sm" data-act="del" data-id="${c.id}" style="color:var(--bad)">删除</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+$('#listBox').addEventListener('click', e => {
+  const b = e.target.closest('button[data-act]');
+  if (!b) return;
+  const c = S.cards.find(x => x.id === b.dataset.id);
+  if (!c) return;
+  if (b.dataset.act === 'spk') speak(backText(c));
+  else if (b.dataset.act === 'del') {
+    if (confirm('删除这张卡片？\n' + frontText(c))) { S.cards = S.cards.filter(x => x.id !== c.id); save(); renderList(); }
+  } else if (b.dataset.act === 'edit') editCard(c);
+});
+
+/* 编辑 / 新增：用一个简易弹层 */
+function editCard(c) {
+  const isNew = !c;
+  const t = c ? c.type : 'word';
+  const v = c || { type: 'word', word: '', ipa: '', cn: '', example: '', exampleCn: '', original: '', corrected: '', note: '' };
+  const html = `<div id="modal" style="position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:50;display:flex;align-items:center;justify-content:center;padding:16px">
+    <div class="card" style="width:100%;max-width:520px;max-height:88vh;overflow:auto;margin:0">
+      <h3>${isNew ? '新增卡片' : '编辑卡片'}</h3>
+      <div class="field"><label>类型</label>
+        <select id="mType"><option value="word"${t === 'word' ? ' selected' : ''}>生词</option><option value="sentence"${t === 'sentence' ? ' selected' : ''}>句子</option></select>
+      </div>
+      <div id="mWord">
+        <div class="field"><label>单词</label><input type="text" id="mW" value="${esc(v.word)}" /></div>
+        <div class="field"><label>音标</label><input type="text" id="mI" value="${esc(v.ipa)}" /></div>
+        <div class="field"><label>释义</label><input type="text" id="mC" value="${esc(v.cn)}" /></div>
+        <div class="field"><label>例句（英文）</label><input type="text" id="mE" value="${esc(v.example)}" /></div>
+        <div class="field"><label>例句翻译</label><input type="text" id="mEC" value="${esc(v.exampleCn)}" /></div>
+      </div>
+      <div id="mSent">
+        <div class="field"><label>原句</label><input type="text" id="mO" value="${esc(v.original)}" /></div>
+        <div class="field"><label>修正</label><input type="text" id="mF" value="${esc(v.corrected)}" /></div>
+        <div class="field"><label>重点</label><textarea id="mN" style="min-height:80px">${esc(v.note)}</textarea></div>
+      </div>
+      <div class="rowflex" style="margin-top:6px">
+        <button class="btn primary" id="mSave">保存</button>
+        <button class="btn" id="mCancel">取消</button>
+      </div>
+    </div></div>`;
+  document.body.insertAdjacentHTML('beforeend', html);
+  const close = () => { const m = $('#modal'); if (m) m.remove(); };
+  const sync = () => {
+    const typ = $('#mType').value;
+    $('#mWord').style.display = typ === 'word' ? '' : 'none';
+    $('#mSent').style.display = typ === 'sentence' ? '' : 'none';
+  };
+  $('#mType').addEventListener('change', sync); sync();
+  $('#mCancel').addEventListener('click', close);
+  $('#modal').addEventListener('click', e => { if (e.target.id === 'modal') close(); });
+  $('#mSave').addEventListener('click', () => {
+    const typ = $('#mType').value;
+    const data = typ === 'word'
+      ? { type: 'word', word: $('#mW').value.trim(), ipa: $('#mI').value.trim(), cn: $('#mC').value.trim(), example: $('#mE').value.trim(), exampleCn: $('#mEC').value.trim() }
+      : { type: 'sentence', original: $('#mO').value.trim(), corrected: $('#mF').value.trim(), note: $('#mN').value.trim() };
+    if (!(typ === 'word' ? data.word : data.original)) { toast('内容不能为空'); return; }
+    if (isNew) S.cards.push(normalize(data));
+    else Object.assign(c, data);
+    save(); close(); renderList(); buildQueue(); nextCard();
+    toast('已保存');
+  });
+}
+$('#btnAdd').addEventListener('click', () => editCard(null));
+
+/* ================= 导入 ================= */
+$('#btnLoadSeed').addEventListener('click', () => { $('#rawIn').value = SEED; toast('已载入今晚示例'); });
+$('#btnClearIn').addEventListener('click', () => { $('#rawIn').value = ''; $('#pvBox').hidden = true; });
+$('#btnParse').addEventListener('click', () => {
+  const items = parseText($('#rawIn').value);
+  if (!items.length) { toast('没解析出内容，检查一下格式'); return; }
+  $('#pvBox').hidden = false;
+  const words = items.filter(i => i.type === 'word').length;
+  $('#pvCount').textContent = `解析出 ${items.length} 条：生词 ${words} 条，句子 ${items.length - words} 条`;
+  $('#pvList').innerHTML = items.map((c, i) => c.type === 'word'
+    ? `<div><span class="k">${i + 1}. [词]</span> ${esc(c.word)} <span class="muted">${esc(c.ipa)}</span> — ${esc(c.cn)}${c.example ? '<br /><span class="muted">例：' + esc(c.example) + ' ' + esc(c.exampleCn) + '</span>' : ''}</div>`
+    : `<div><span class="k">${i + 1}. [句]</span> <span class="muted">${esc(c.original)}</span><br />→ ${esc(c.corrected)}${c.note ? '<br /><span class="muted">' + esc(c.note) + '</span>' : ''}</div>`
+  ).join('');
+  window.__parsed = items;
+});
+$('#btnPvCancel').addEventListener('click', () => { $('#pvBox').hidden = true; });
+function doImport(replace) {
+  const items = window.__parsed || [];
+  if (!items.length) { toast('先点「解析预览」'); return; }
+  const fresh = items.map(normalize);
+  if (replace) S.cards = fresh;
+  else {
+    const seen = new Set(S.cards.map(c => (c.word || c.original || '').toLowerCase()));
+    S.cards = S.cards.concat(fresh.filter(c => !seen.has((c.word || c.original || '').toLowerCase())));
+  }
+  save(); buildQueue(); nextCard(); renderList();
+  $('#pvBox').hidden = true; $('#rawIn').value = '';
+  toast(replace ? '已替换全部卡片' : '已追加导入');
+  switchView('review');
+}
+$('#btnImportMerge').addEventListener('click', () => doImport(false));
+$('#btnImportReplace').addEventListener('click', () => doImport(true));
+$('#btnCopyPrompt').addEventListener('click', async () => {
+  try { await navigator.clipboard.writeText(PROMPT); toast('提示词已复制，去发给豆包'); }
+  catch (e) {
+    const ta = document.createElement('textarea');
+    ta.value = PROMPT; document.body.appendChild(ta); ta.select();
+    try { document.execCommand('copy'); toast('提示词已复制'); } catch (x) { toast('复制失败，请手动选中'); }
+    ta.remove();
+  }
+});
+
+/* ================= 备份 ================= */
+function download(name, text, mime) {
+  const blob = new Blob([text], { type: mime || 'text/plain;charset=utf-8' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob); a.download = name;
+  document.body.appendChild(a); a.click();
+  setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 500);
+}
+$('#btnExportJson').addEventListener('click', () => {
+  download('英语卡片备份_' + new Date().toISOString().slice(0, 10) + '.json', JSON.stringify(S, null, 2), 'application/json');
+});
+$('#btnExportMd').addEventListener('click', () => {
+  const words = S.cards.filter(c => c.type === 'word');
+  const sents = S.cards.filter(c => c.type === 'sentence');
+  let md = '# 英语复习卡片\n\n## 生词\n\n';
+  words.forEach((c, i) => {
+    md += `${i + 1}. **${c.word}** ${c.ipa || ''} — ${c.cn || ''}\n`;
+    if (c.example) md += `   - ${c.example}${c.exampleCn ? ' ' + c.exampleCn : ''}\n`;
+  });
+  md += '\n## 句子纠错\n\n';
+  sents.forEach((c, i) => {
+    md += `${i + 1}. 原句：${c.original}\n   - 修正：${c.corrected || ''}\n`;
+    if (c.note) md += `   - 重点：${c.note.replace(/\n/g, ' ')}\n`;
+  });
+  download('英语复习卡片_' + new Date().toISOString().slice(0, 10) + '.md', md, 'text/markdown;charset=utf-8');
+});
+$('#btnImportJson').addEventListener('click', () => $('#fileJson').click());
+$('#fileJson').addEventListener('change', e => {
+  const f = e.target.files[0]; if (!f) return;
+  const r = new FileReader();
+  r.onload = () => {
+    try {
+      const o = JSON.parse(r.result);
+      if (!o.cards) throw new Error('格式不对');
+      if (!confirm('用备份文件替换当前全部卡片？')) return;
+      S = { cards: o.cards.map(normalize), settings: Object.assign({}, DEFAULT_SETTINGS, o.settings || {}) };
+      save(); buildQueue(); nextCard(); renderList(); renderSettings();
+      toast('恢复成功');
+    } catch (err) { toast('导入失败：' + err.message); }
+  };
+  r.readAsText(f, 'utf-8');
+  e.target.value = '';
+});
+
+/* ================= 设置 ================= */
+function renderSettings() {
+  $('#rate').value = S.settings.rate;
+  $('#rateVal').textContent = Number(S.settings.rate).toFixed(2).replace(/0$/, '');
+  $('#autoPlay').checked = !!S.settings.autoPlay;
+  $('#orderSel').value = S.settings.order;
+  $('#themeSel').value = S.settings.theme;
+  $('#blindBox').checked = !!S.settings.blind;
+  const learned = S.cards.filter(c => c.box > 0).length;
+  $('#dataStat').textContent = `共 ${S.cards.length} 张（生词 ${S.cards.filter(c => c.type === 'word').length} / 句子 ${S.cards.filter(c => c.type === 'sentence').length}），已进入复习周期 ${learned} 张。`;
+  loadVoices();
+}
+$('#rate').addEventListener('input', e => {
+  S.settings.rate = Number(e.target.value);
+  $('#rateVal').textContent = Number(S.settings.rate).toFixed(2).replace(/0$/, '');
+  save();
+});
+$('#rate').addEventListener('change', () => speak('This is the speed I will use.'));
+$('#voiceSel').addEventListener('change', e => { S.settings.voiceURI = e.target.value; save(); speak('Hello, this is my voice.'); });
+$('#autoPlay').addEventListener('change', e => { S.settings.autoPlay = e.target.checked; save(); });
+$('#orderSel').addEventListener('change', e => { S.settings.order = e.target.value; save(); buildQueue(); nextCard(); });
+$('#themeSel').addEventListener('change', e => { S.settings.theme = e.target.value; save(); applyTheme(); });
+$('#btnTest').addEventListener('click', () => speak('A flower develops into a grape.'));
+$('#btnResetBox').addEventListener('click', () => {
+  if (!confirm('把所有卡片重置为「未复习」？')) return;
+  S.cards.forEach(c => { c.box = 0; c.due = 0; c.right = 0; c.wrong = 0; });
+  save(); buildQueue(); nextCard(); renderSettings(); toast('已重置');
+});
+$('#btnClearAll').addEventListener('click', () => {
+  if (!confirm('清空所有卡片？建议先导出备份。')) return;
+  if (!confirm('再确认一次：真的要清空吗？')) return;
+  S.cards = []; save(); buildQueue(); nextCard(); renderList(); renderSettings(); toast('已清空');
+});
+
+/* ================= 主题 ================= */
+function applyTheme() {
+  const t = S.settings.theme;
+  const dark = t === 'dark' || (t === 'auto' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+  document.documentElement.setAttribute('data-theme', dark ? 'dark' : 'light');
+  const mc = document.querySelector('meta[name=theme-color]');
+  if (mc) mc.setAttribute('content', dark ? '#0f1115' : '#f5f6f8');
+}
+window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => { if (S.settings.theme === 'auto') applyTheme(); });
+
+/* ================= 启动 ================= */
+function init() {
+  applyTheme();
+  $('#promptBox').textContent = PROMPT;
+  $('#blindBox').checked = !!S.settings.blind;
+  if (synth) { loadVoices(); synth.onvoiceschanged = loadVoices; }
+  buildQueue();
+  nextCard();
+  renderSettings();
+}
+init();
+</script>
+</body>
+</html>
